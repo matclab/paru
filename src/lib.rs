@@ -189,6 +189,10 @@ async fn run2<S: AsRef<str>>(config: &mut Config, args: &[S]) -> Result<i32> {
         clone_dir: config.build_dir.clone(),
         diff_dir: config.cache_dir.join("diff"),
         aur_url,
+        parallel: config.aur_max_parallel,
+        download_delay: config.aur_download_delay(),
+        max_retries: config.aur_max_retries,
+        retry_delay: std::time::Duration::from_secs(config.aur_retry_delay),
     };
 
     let mut fetch = config.fetch.clone();

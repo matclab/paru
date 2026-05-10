@@ -211,6 +211,26 @@ impl Config {
                     .parse()
                     .map_err(|_| anyhow!("option {} must be a number", arg))?
             }
+            Arg::Long("aurmaxparallel") => {
+                self.aur_max_parallel = value?
+                    .parse()
+                    .map_err(|_| anyhow!("option {} must be a number", arg))?
+            }
+            Arg::Long("aurdownloaddelay") => {
+                self.aur_download_delay = value?
+                    .parse()
+                    .map_err(|_| anyhow!("option {} must be a number", arg))?
+            }
+            Arg::Long("aurmaxretries") => {
+                self.aur_max_retries = value?
+                    .parse()
+                    .map_err(|_| anyhow!("option {} must be a number", arg))?
+            }
+            Arg::Long("aurretrydelay") => {
+                self.aur_retry_delay = value?
+                    .parse()
+                    .map_err(|_| anyhow!("option {} must be a number", arg))?
+            }
             Arg::Long("sortby") => self.sort_by = ConfigEnum::from_str(argkey, value?)?,
             Arg::Long("searchby") => self.search_by = ConfigEnum::from_str(argkey, value?)?,
             Arg::Long("limit") => self.limit = value?.parse()?,
@@ -417,6 +437,10 @@ fn takes_value(arg: Arg) -> TakesValue {
         Arg::Long("chrootpkgs") => TakesValue::Required,
         Arg::Long("rootchrootpkgs") => TakesValue::Required,
         Arg::Long("completioninterval") => TakesValue::Required,
+        Arg::Long("aurmaxparallel") => TakesValue::Required,
+        Arg::Long("aurdownloaddelay") => TakesValue::Required,
+        Arg::Long("aurmaxretries") => TakesValue::Required,
+        Arg::Long("aurretrydelay") => TakesValue::Required,
         Arg::Long("sortby") => TakesValue::Required,
         Arg::Long("searchby") => TakesValue::Required,
         Arg::Long("limit") => TakesValue::Required,

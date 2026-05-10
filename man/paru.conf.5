@@ -223,6 +223,29 @@ cache to be refreshed every time, while setting this to -1 will cause the cache
 to never be refreshed. Defaults to 7.
 
 .TP
+.B AurMaxParallel = N
+Maximum number of AUR packages to download (git clone/fetch) concurrently.
+Lowering this is the main way to avoid AUR rate limiting. Defaults to 20.
+
+.TP
+.B AurDownloadDelay = N
+Minimum delay, in seconds, between starting two consecutive AUR downloads.
+This is a global throttle applied regardless of how many downloads run in
+parallel. Defaults to 0 (disabled).
+
+.TP
+.B AurMaxRetries = N
+How many times to retry an AUR download that failed with a transient network
+error (connection closed/reset, timeouts, HTTP 429/5xx, DNS failures, ...).
+Non-transient errors (missing package, auth) are not retried. Defaults to 3.
+
+.TP
+.B AurRetryDelay = N
+Base delay, in seconds, for the exponential backoff between download retries.
+Retry number n waits AurRetryDelay * 2^n seconds, capped at 30 seconds.
+Defaults to 2.
+
+.TP
 .B PacmanConf = path/to/pacman.conf
 The pacman config file to use.
 

@@ -14,6 +14,7 @@ use std::fs::{remove_file, OpenOptions};
 use std::io::{stderr, stdin, stdout, BufRead, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::time::Duration;
 
 use alpm::{
     AnyDownloadEvent, AnyQuestion, Depend, DownloadEvent, DownloadResult, LogLevel, Question,
@@ -441,6 +442,19 @@ pub struct Config {
     #[default = 7]
     pub completion_interval: u64,
 
+    /// Max number of AUR packages to download (git clone/fetch) concurrently.
+    #[default = 20]
+    pub aur_max_parallel: usize,
+    /// Minimum delay in seconds between two AUR downloads (0 = disabled).
+    pub aur_download_delay: u64,
+    /// How many times to retry an AUR download that failed with a transient
+    /// network error.
+    #[default = 3]
+    pub aur_max_retries: usize,
+    /// Base delay in seconds for exponential backoff between download retries.
+    #[default = 2]
+    pub aur_retry_delay: u64,
+
     pub help: bool,
     pub version: bool,
 
@@ -662,6 +676,11 @@ impl Config {
         self.globals.as_str()
     }
 
+    /// AUR download throttle delay, or `None` when disabled (0).
+    pub fn aur_download_delay(&self) -> Option<Duration> {
+        (self.aur_download_delay > 0).then(|| Duration::from_secs(self.aur_download_delay))
+    }
+
     pub fn parse_args<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, iter: I) -> Result<()> {
         let iter = iter.into_iter();
         let mut iter = iter.peekable();
@@ -762,6 +781,10 @@ impl Config {
             clone_dir: self.build_dir.clone(),
             diff_dir: self.cache_dir.join("diff"),
             aur_url: aur_url.clone(),
+            parallel: self.aur_max_parallel,
+            download_delay: self.aur_download_delay(),
+            max_retries: self.aur_max_retries,
+            retry_delay: Duration::from_secs(self.aur_retry_delay),
         };
 
         self.pkgbuild_repos.fetch = aur_fetch::Fetch {
@@ -770,6 +793,10 @@ impl Config {
             clone_dir: self.build_dir.join("repo"),
             diff_dir: self.cache_dir.join("repo/diff"),
             aur_url,
+            parallel: self.aur_max_parallel,
+            download_delay: self.aur_download_delay(),
+            max_retries: self.aur_max_retries,
+            retry_delay: Duration::from_secs(self.aur_retry_delay),
         };
 
         for repo in &mut self.pkgbuild_repos.repos {
@@ -1116,6 +1143,10 @@ then initialise it with:
             "SearchBy" => self.search_by = ConfigEnum::from_str(key, value?.as_str())?,
             "Limit" => self.limit = value?.parse()?,
             "CompletionInterval" => self.completion_interval = value?.parse()?,
+            "AurMaxParallel" => self.aur_max_parallel = value?.parse()?,
+            "AurDownloadDelay" => self.aur_download_delay = value?.parse()?,
+            "AurMaxRetries" => self.aur_max_retries = value?.parse()?,
+            "AurRetryDelay" => self.aur_retry_delay = value?.parse()?,
             "PacmanConf" => self.pacman_conf = Some(value?),
             "MakepkgConf" => self.makepkg_conf = Some(value?),
             "DevelSuffixes" => {
